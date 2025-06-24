@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure File Receiver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-indigo-200 to-pink-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white/95 p-6 md:p-8 rounded-xl shadow-lg w-full max-w-lg transform transition-all duration-300 hover:shadow-xl">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Secure File Receiver</h1>
+        {% if error %}
+            <div class="bg-red-100 text-red-700 p-3 rounded-md mb-4 text-sm text-center border border-red-200">{{ error }}</div>
+        {% endif %}
+
+        <!-- Section 1: Decrypt Directly -->
+        <div class="bg-gradient-to-br from-teal-100 to-green-100 p-4 rounded-md mb-6 border border-teal-200">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Decrypt File Directly</h2>
+            <form id="downloadForm" action="/download_file/{{ token }}" method="post" enctype="multipart/form-data" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-teal-600">Your Private Key</label>
+                    <textarea id="privateKeyInput" name="recipient_private_key" rows="4" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-400 focus:border-teal-400 p-2 text-sm resize-none bg-gray-50 text-gray-800 placeholder-gray-400"></textarea>
+                    <input type="file" id="privateKeyFile" name="privateKeyFile" accept=".pem" class="mt-2 w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-teal-100 file:text-teal-700 hover:file:bg-teal-200 transition duration-200">
+                    <p class="mt-1 text-xs text-gray-600">Paste or upload your private key (PEM format). Keep this secret.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-teal-600">Sender's Public Key</label>
+                    <textarea id="senderKeyInput" name="sender_public_key" rows="4" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-teal-400 focus:border-teal-400 p-2 text-sm resize-none bg-gray-50 text-gray-800 placeholder-gray-400">{{ sender_public_key }}</textarea>
+                    <input type="file" id="senderKeyFile" name="senderKeyFile" accept=".pem" class="mt-2 w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-teal-100 file:text-teal-700 hover:file:bg-teal-200 transition duration-200">
+                    <p class="mt-1 text-xs text-gray-600">Paste or upload sender's public key (PEM format).</p>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-teal-400 to-green-400 text-white py-2 px-4 rounded-md hover:from-teal-500 hover:to-green-500 transition duration-200 font-semibold text-lg shadow-md hover:shadow-lg" download="{{ filename }}">Receive File (Decrypt)</button>
+            </form>
+        </div>
+
+        <!-- Section 2: Download Encrypted File -->
+        <div class="bg-gradient-to-br from-indigo-100 to-blue-100 p-4 rounded-md mb-6 border border-blue-200">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Download Encrypted File</h2>
+            <a href="/download_encrypted_receiver/{{ token }}" class="block w-full text-center bg-gradient-to-r from-indigo-400 to-blue-400 text-white py-2 px-4 rounded-md hover:from-indigo-500 hover:to-blue-500 transition duration-200 font-semibold text-lg shadow-md hover:shadow-lg" download="{{ filename }}_encrypted.enc">Download Encrypted File</a>
+        </div>
+
+        <!-- Section 3: Upload and Decrypt -->
+        <div class="bg-gradient-to-br from-purple-100 to-pink-100 p-4 rounded-md border border-purple-200">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Upload Encrypted File to Decrypt</h2>
+            <form id="uploadDecryptForm" action="/upload_encrypted/{{ token }}" method="post" enctype="multipart/form-data" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-purple-600">Encrypted File</label>
+                    <input type="file" id="encryptedFileInput" name="encrypted_file" accept=".enc" class="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 transition duration-200" required>
+                    <p class="mt-1 text-xs text-gray-600">Upload the encrypted file (.enc) you downloaded.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-purple-600">Your Private Key</label>
+                    <textarea id="uploadPrivateKeyInput" name="recipient_private_key" rows="4" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-400 focus:border-purple-400 p-2 text-sm resize-none bg-gray-50 text-gray-800 placeholder-gray-400"></textarea>
+                    <input type="file" id="uploadPrivateKeyFile" name="privateKeyFile" accept=".pem" class="mt-2 w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 transition duration-200">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-purple-600">Sender's Public Key</label>
+                    <textarea id="uploadSenderKeyInput" name="sender_public_key" rows="4" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-400 focus:border-purple-400 p-2 text-sm resize-none bg-gray-50 text-gray-800 placeholder-gray-400"></textarea>
+                    <input type="file" id="uploadSenderKeyFile" name="senderKeyFile" accept=".pem" class="mt-2 w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200 transition duration-200">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-400 to-pink-400 text-white py-2 px-4 rounded-md hover:from-purple-500 hover:to-pink-500 transition duration-200 font-semibold text-lg shadow-md hover:shadow-lg" download="{{ filename }}">Upload and Decrypt</button>
+            </form>
+        </div>
+
+        <div id="errorMessage" class="hidden text-red-600 mt-4 text-center"></div>
+    </div>
+    <script>
+        document.getElementById('downloadForm').addEventListener('submit', function(event) {
+            const privateKeyInput = document.getElementById('privateKeyInput');
+            const privateKeyFile = document.getElementById('privateKeyFile');
+            const senderKeyInput = document.getElementById('senderKeyInput');
+            const senderKeyFile = document.getElementById('senderKeyFile');
+            const errorMessage = document.getElementById('errorMessage');
+
+            const privateKeyContent = privateKeyInput.value || (privateKeyFile.files.length > 0 ? 'valid' : '');
+            if (!privateKeyContent) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Please provide your private key.';
+                return;
+            }
+            if (privateKeyInput.value && !privateKeyInput.value.includes('-----BEGIN PRIVATE KEY-----')) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Invalid private key format (must be PEM).';
+                return;
+            }
+
+            const senderKeyContent = senderKeyInput.value || (senderKeyFile.files.length > 0 ? 'valid' : '');
+            if (!senderKeyContent) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Please provide the sender\'s public key.';
+                return;
+            }
+            if (senderKeyInput.value && !senderKeyInput.value.includes('-----BEGIN PUBLIC KEY-----')) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Invalid sender public key format (must be PEM).';
+                return;
+            }
+        });
+
+        document.getElementById('uploadDecryptForm').addEventListener('submit', function(event) {
+            const encryptedFileInput = document.getElementById('encryptedFileInput');
+            const privateKeyInput = document.getElementById('uploadPrivateKeyInput');
+            const privateKeyFile = document.getElementById('uploadPrivateKeyFile');
+            const senderKeyInput = document.getElementById('uploadSenderKeyInput');
+            const senderKeyFile = document.getElementById('uploadSenderKeyFile');
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (encryptedFileInput.files.length === 0) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Please upload an encrypted file.';
+                return;
+            }
+            if (!encryptedFileInput.files[0].name.endsWith('.enc')) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Please upload a .enc file.';
+                return;
+            }
+
+            const privateKeyContent = privateKeyInput.value || (privateKeyFile.files.length > 0 ? 'valid' : '');
+            if (!privateKeyContent) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Please provide your private key.';
+                return;
+            }
+            if (privateKeyInput.value && !privateKeyInput.value.includes('-----BEGIN PRIVATE KEY-----')) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Invalid private key format (must be PEM).';
+                return;
+            }
+
+            const senderKeyContent = senderKeyInput.value || (senderKeyFile.files.length > 0 ? 'valid' : '');
+            if (!senderKeyContent) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Please provide the sender\'s public key.';
+                return;
+            }
+            if (senderKeyInput.value && !senderKeyInput.value.includes('-----BEGIN PUBLIC KEY-----')) {
+                event.preventDefault();
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = 'Invalid sender public key format (must be PEM).';
+                return;
+            }
+        });
+    </script>
+</body>
+</html>
